@@ -1,0 +1,35 @@
+#!/bin/sh
+
+#Include lib_node.sh for accessing node_id
+. /lib/freifunk/lib_node.sh
+
+
+# This script creates collectd.conf after flashing.
+
+# collectd uses node_id.nodes.ffm.freifunk.net as hostname
+# nodes.ffm.freifunk.net does not exists at this time (2012-01-15).
+# However, if needed, it can be set up using register / mysql- or ldap-based bind9 easily - or -
+# mdns if avahi is configured to resove nodes.ffm.freifunk.net and not .local
+
+local hostname="$(get_node_id).nodes.ffm.freifunk.net"
+
+cat > /etc/collectd.conf <<EOF
+Hostname   "${hostname}"
+BaseDir     "/var/lib/collectd"
+PIDFile     "/var/run/collectd.pid"
+Interval    10
+ReadThreads 2
+
+LoadPlugin network
+LoadPlugin interface
+
+<Plugin interface>
+        Interface "br-wan"
+        Interface "wlan0-1"
+        IgnoreSelected false
+</Plugin>
+
+<Plugin network>
+        Server "collectd.ffm.freifunk.net" "25827"
+</Plugin>
+EOF
